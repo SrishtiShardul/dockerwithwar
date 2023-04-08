@@ -1,0 +1,84 @@
+
+
+pipeline {
+
+   agent any
+
+   tools{
+
+       maven 'MAVEN_HOME'
+
+   }
+
+   stages {
+
+       stage('git repo & clean') {
+
+           steps {
+
+               //bat "rmdir /s /q java-tomcat-maven-example"
+
+               bat "git clone https://github.com/daticahealth/java-tomcat-maven-example.git"
+
+               bat "mvn clean -f java-tomcat-maven-example"
+
+           }
+
+       }
+
+       stage('install') {
+
+           steps {
+
+               bat "mvn install -f java-tomcat-maven-example"
+
+           }
+
+       }
+
+       stage('test') {
+
+           steps {
+
+               bat "mvn test -f java-tomcat-maven-example"
+
+           }
+
+       }
+
+       stage('package') {
+
+           steps {
+
+               bat "mvn package -f java-tomcat-maven-example"
+
+           }
+
+           post{
+
+               success{
+
+                   echo "Archiving the Artifacts"
+
+                   archiveArtifacts artifacts: '**/target/*.war'
+
+               }
+
+           }
+
+       }
+
+       stage('Deploy to tomcat') {
+
+           steps {
+
+ deploy adapters: [tomcat9(credentialsId: 'f2e608c4-5230-4396-8eaf-5d5e4e79fa9a', path: '', url: 'http://localhost:8080/')], contextPath: null, war: '**/*.war'
+
+
+           }
+
+       }
+
+   }   
+
+}
